@@ -1,0 +1,45 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Plan Terraform prod
+        run: terraform plan -var-file=environments/prod/terraform.tfvars
+      - name: Plan Terraform uat
+      
+        run: terraform plan -var-file=environments/uat/terraform.tfvars      
+      - name: Plan Terraform dev
+      
+        run: terraform plan -var-file=environments/dev/terraform.tfvars
+      
+      - name: Apply Terraform prod
+        run: terraform apply -var-file=environments/prod/terraform.tfvars -auto-approve
+        
+      - name: Apply Terraform uat
+        run: terraform apply -var-file=environments/uat/terraform.tfvars -auto-approve
+        
+      - name: Apply Terraform dev
+        run: terraform apply -var-file=environments/dev/terraform.tfvars -auto-approve
